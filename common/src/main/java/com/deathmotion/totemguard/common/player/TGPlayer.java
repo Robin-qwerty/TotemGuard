@@ -28,9 +28,15 @@ import com.deathmotion.totemguard.common.cache.CacheKeys;
 import com.deathmotion.totemguard.common.cache.CacheRepositoryImpl;
 import com.deathmotion.totemguard.common.cache.data.CheckSnapshot;
 import com.deathmotion.totemguard.common.check.CheckManagerImpl;
+import com.deathmotion.totemguard.common.config.view.BedrockView;
+import com.deathmotion.totemguard.common.features.bedrock.BedrockDebugLogger;
+import com.deathmotion.totemguard.common.features.integration.IntegrationRegistrar;
+import com.deathmotion.totemguard.common.features.integration.impl.FloodgateIntegration;
 import com.deathmotion.totemguard.common.features.mods.ModSession;
 import com.deathmotion.totemguard.common.features.punishment.BanAnimationImpl;
 import com.deathmotion.totemguard.common.platform.player.PlatformPlayer;
+import com.deathmotion.totemguard.common.player.bedrock.BedrockInfo;
+import com.deathmotion.totemguard.common.player.bedrock.BedrockInputMode;
 import com.deathmotion.totemguard.common.player.data.ClickData;
 import com.deathmotion.totemguard.common.player.data.Data;
 import com.deathmotion.totemguard.common.player.data.TickData;
@@ -95,6 +101,10 @@ public class TGPlayer implements TGUser {
     private final int modDetectionWindowId = -ThreadLocalRandom.current().nextInt(10_000, Integer.MAX_VALUE);
     private boolean hasLoggedIn;
     private @Nullable PlatformPlayer platformPlayer;
+
+    private volatile boolean bedrockPlayer;
+    private volatile String bedrockDeviceOs = "UNKNOWN";
+    private volatile BedrockInputMode bedrockInputMode = BedrockInputMode.UNKNOWN;
 
     @Setter()
     private String clientBrand = "Unknown";
@@ -183,6 +193,7 @@ public class TGPlayer implements TGUser {
         }
 
         supportsEndTickCache = computeSupportsEndTick();
+        resolveBedrockInfo();
 
         platform.getEventBus().getUserJoin().fire(this);
 
@@ -197,6 +208,37 @@ public class TGPlayer implements TGUser {
     public void onLogout() {
         platform.getModDetectionService().onPlayerLogout(uuid);
         platform.getScheduler().runAsyncTask(this::cacheData);
+    }
+
+    private void resolveBedrockInfo() {
+        BedrockView bedrockConfig = platform.getConfigRepository().bedrock();
+        if (!bedrockConfig.isEnabled()) return;
+
+        if (bedrockConfig.isFloodgateDetectionEnabled()) {
+            IntegrationRegistrar integrations = platform.getIntegrationRegistrar();
+            FloodgateIntegration floodgate = integrations == null ? null : integrations.getFloodgateIntegration();
+            if (floodgate != null && floodgate.isEnabled()) {
+                BedrockInfo info = floodgate.lookup(uuid);
+                if (info.bedrock()) {
+                    bedrockPlayer = true;
+                    bedrockDeviceOs = info.deviceOs();
+                    bedrockInputMode = info.inputMode();
+                    BedrockDebugLogger.logDetection(this, "floodgate");
+                    return;
+                }
+                BedrockDebugLogger.logNotDetected(this, "floodgate active, isFloodgatePlayer() returned false");
+            } else {
+                BedrockDebugLogger.logNotDetected(this, "floodgate plugin not detected on this server");
+            }
+        }
+
+        if (bedrockConfig.isUsernamePrefixFallbackEnabled()) {
+            String prefix = bedrockConfig.usernamePrefix();
+            if (!prefix.isEmpty() && user.getName().startsWith(prefix)) {
+                bedrockPlayer = true;
+                BedrockDebugLogger.logDetection(this, "username-prefix-fallback");
+            }
+        }
     }
 
     public void resyncFromPlatform() {

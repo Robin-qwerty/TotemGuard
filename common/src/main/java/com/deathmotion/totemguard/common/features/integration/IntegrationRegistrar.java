@@ -19,6 +19,7 @@
 package com.deathmotion.totemguard.common.features.integration;
 
 import com.deathmotion.totemguard.common.TGPlatform;
+import com.deathmotion.totemguard.common.features.integration.impl.FloodgateIntegration;
 import com.deathmotion.totemguard.common.features.integration.impl.GrimIntegration;
 
 import java.util.ArrayList;
@@ -28,8 +29,10 @@ import java.util.function.Supplier;
 public class IntegrationRegistrar {
 
     private static final String GRIM_PLUGIN_NAME = "GrimAC";
+    private static final String FLOODGATE_PLUGIN_NAME = "floodgate";
 
     private final List<Integration> integrations = new ArrayList<>();
+    private FloodgateIntegration floodgateIntegration;
 
     public IntegrationRegistrar() {
         registerIntegrations();
@@ -61,8 +64,13 @@ public class IntegrationRegistrar {
         integrations.clear();
     }
 
+    public FloodgateIntegration getFloodgateIntegration() {
+        return floodgateIntegration;
+    }
+
     private void registerIntegrations() {
         registerIfEnabled(GRIM_PLUGIN_NAME, this::createGrimIntegration);
+        registerIfEnabled(FLOODGATE_PLUGIN_NAME, this::createFloodgateIntegration);
     }
 
     private void registerIfEnabled(String pluginName, Supplier<Integration> supplier) {
@@ -81,5 +89,10 @@ public class IntegrationRegistrar {
 
     private Integration createGrimIntegration() {
         return new GrimIntegration();
+    }
+
+    private Integration createFloodgateIntegration() {
+        floodgateIntegration = new FloodgateIntegration();
+        return floodgateIntegration;
     }
 }

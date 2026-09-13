@@ -297,7 +297,10 @@ public final class PlayerRepositoryImpl implements UserRepository {
         if (isExempt(uuid)) return false;
         if (!ChannelHelper.isOpen(user.getChannel())) return false;
 
-        if (uuid.getMostSignificantBits() == 0L) {
+        // Floodgate/Bedrock UUIDs deliberately zero the most-significant bits and pack the
+        // XUID into the least-significant bits, so only the literal nil UUID (both halves
+        // zero) identifies a fake-player plugin, not just a zeroed upper half.
+        if (uuid.getMostSignificantBits() == 0L && uuid.getLeastSignificantBits() == 0L) {
             setExempt(uuid, true);
             return false;
         }

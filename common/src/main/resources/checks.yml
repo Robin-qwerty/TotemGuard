@@ -135,3 +135,19 @@ ManualTotemA:
 
   punishment-commands:
     - "%default_punishment%"
+
+BedrockAutoTotemA:
+  enabled: true
+  punishable: false
+  max-violations: 2
+
+  punishment-commands:
+    - "%default_punishment%"
+
+BedrockAutoTotemB:
+  enabled: true
+  punishable: false
+  max-violations: 2
+
+  punishment-commands:
+    - "%default_punishment%"

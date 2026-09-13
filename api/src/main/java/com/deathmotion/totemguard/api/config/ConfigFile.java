@@ -49,7 +49,13 @@ public enum ConfigFile {
     /**
      * Discord webhook routing ({@code discord.yml}), endpoint URLs and template overrides.
      */
-    DISCORD("discord.yml");
+    DISCORD("discord.yml"),
+
+    /**
+     * Bedrock/Geyser detection tuning ({@code bedrock.yml}), the Floodgate integration toggle,
+     * the debug-logging switch, and per-check thresholds for the Bedrock AutoTotem check family.
+     */
+    BEDROCK("bedrock.yml");
 
     private final String fileName;
 

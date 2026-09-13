@@ -1,0 +1,83 @@
+#    ___________     __                   ________                       .___
+#    \__    ___/____/  |_  ____   _____  /  _____/ __ _______ _______  __| _/
+#      |    | /  _ \   __\/ __ \ /     \/   \  ___|  |  \__  \\_  __ \/ __ |
+#      |    |(  <_> )  | \  ___/|  Y Y  \    \_\  \  |  // __ \|  | \/ /_/ |
+#      |____| \____/|__|  \___  >__|_|  /\______  /____/(____  /__|  \____ |
+#                             \/      \/        \/           \/           \/
+
+# The version of this file. DO NOT TOUCH!!!
+config_version: 1
+
+# Master switch for all Bedrock (Geyser/Floodgate) detection and the Bedrock check family.
+# When false, BedrockAutoTotemA/B never evaluate and no Bedrock lookups happen, regardless
+# of what checks.yml says for those two checks.
+enabled: true
+
+# How TotemGuard decides a connecting player is on Bedrock Edition.
+detection:
+  # Authoritative source, the Floodgate plugin's own API. Requires the "floodgate" plugin
+  # to be installed on this backend server (not just the proxy) sharing the same key.pem
+  # as your Geyser instance, the standard Velocity + Geyser + Floodgate setup. This is a
+  # no-op if Floodgate isn't installed here, nothing else needs to change.
+  floodgate:
+    enabled: true
+
+  # Fallback signal for setups without Floodgate on this backend, flags a player as
+  # Bedrock if their username starts with this prefix. Floodgate's own default prefix
+  # for unlinked accounts is ".". Off by default, a cracked or offline-mode Java client
+  # could in theory pick a username with this prefix on a server that does not enforce
+  # Mojang's username rules, producing a false positive. Ignored entirely once Floodgate
+  # has already identified the player above.
+  username-prefix-fallback:
+    enabled: false
+    prefix: "."
+
+# Existing Java-only checks known to false-flag Bedrock players, because Geyser's protocol
+# translation doesn't reproduce a real Java client closely enough for these specific
+# mechanics. Bedrock players are fully exempted from every check listed here, no flags,
+# no alerts, no punishment, no mitigation side effects. The check still runs normally for
+# every Java player. Add a check's name here if you discover another one that misbehaves
+# for your Bedrock players.
+exempt-checks:
+  # Validates strict client ack ordering for transaction/keepalive/teleport-confirm packets.
+  # Geyser has to synthesize/relay these between Bedrock's own protocol and Java's, and does
+  # not reproduce a real Java client's ack timing closely enough for this to hold.
+  - TickB
+  # Flags movement/aim/action packets received while the inventory should be closed. Bedrock's
+  # touch/controller input can still leak minor camera or virtual-joystick drift packets
+  # through Geyser's translation while a container screen is open, which a real Java client
+  # (mouse captured by the GUI) would never send, tripping this on ordinary inventory use.
+  - InventoryA
+
+# Verbose diagnostic logging for every relevant Bedrock totem event, not just flags,
+# written through the server logger. There is no real Bedrock timing data to calibrate
+# the thresholds below yet. Turn this on, let it collect data from real Bedrock players
+# for a while, and use the numbers before ever setting punishable: true in checks.yml.
+debug-logging:
+  enabled: false
+
+# Per-check tuning. Every threshold below is a first guess, not derived from real
+# Bedrock client data. Use debug-logging above to gather real numbers before trusting
+# these, and keep punishable: false in checks.yml until you do.
+checks:
+  BedrockAutoTotemA:
+    # Bedrock's simplified touch or controller hotbar swap can legitimately look faster
+    # and more mechanical than a mouse swap, so this is looser than AutoTotemA's 5ms.
+    max-click-diff-ms: 15
+    # Same dimension as AutoTotemA, human reaction time to the totem pop, not really
+    # input-device dependent, so left unchanged from the Java default.
+    max-use-to-place-diff-ms: 1500
+
+  BedrockAutoTotemB:
+    # Sample size across the last N totem-replenish intervals, same shape as AutoTotemB.
+    sample-size: 5
+    # Below this stdDev (ms), treat the timing as highly suspicious. Tightened from
+    # AutoTotemB's 5.0 because Bedrock's UI may legitimately produce more consistent
+    # timing than a mouse, so a higher bar is needed before calling it robotic.
+    very-suspicious-stddev-ms: 3.0
+    # Below this stdDev (ms), treat the timing as suspicious. Tightened from AutoTotemB's
+    # 15.0 for the same reason.
+    suspicious-stddev-ms: 10.0
+    # Above this stdDev (ms), reward the player (more human-like). Lowered from
+    # AutoTotemB's 60.0 to match the tightened punish bands above.
+    legitimate-stddev-ms: 40.0

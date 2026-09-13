@@ -26,6 +26,7 @@ import com.deathmotion.totemguard.common.config.legacy.V2ConfigMigrator;
 import com.deathmotion.totemguard.common.config.migration.MigrationRegistry;
 import com.deathmotion.totemguard.common.config.service.ConfigService;
 import com.deathmotion.totemguard.common.config.service.ConfigSnapshot;
+import com.deathmotion.totemguard.common.config.view.BedrockView;
 import com.deathmotion.totemguard.common.config.view.ChecksView;
 import com.deathmotion.totemguard.common.config.view.ConfigView;
 import com.deathmotion.totemguard.common.config.view.DiscordView;
@@ -49,6 +50,7 @@ public final class ConfigRepositoryImpl implements ConfigRepository {
     private final AtomicReference<ChecksView> checksView = new AtomicReference<>();
     private final AtomicReference<ModsView> modsView = new AtomicReference<>();
     private final AtomicReference<DiscordView> discordView = new AtomicReference<>();
+    private final AtomicReference<BedrockView> bedrockView = new AtomicReference<>();
 
     public ConfigRepositoryImpl() {
         TGPlatform platform = TGPlatform.getInstance();
@@ -105,6 +107,10 @@ public final class ConfigRepositoryImpl implements ConfigRepository {
         return discordView.get();
     }
 
+    public @NotNull BedrockView bedrock() {
+        return bedrockView.get();
+    }
+
     @Override
     public void reload(@NotNull ConfigFile file) {
         ConfigSnapshot snap = service.loadAndMigrate(file);
@@ -127,6 +133,7 @@ public final class ConfigRepositoryImpl implements ConfigRepository {
             case CHECKS -> checksView.set(new ChecksView(snap.view()));
             case MODS -> modsView.set(new ModsView(snap.view()));
             case DISCORD -> discordView.set(new DiscordView(snap.view()));
+            case BEDROCK -> bedrockView.set(new BedrockView(snap.view()));
             default -> {
             }
         }

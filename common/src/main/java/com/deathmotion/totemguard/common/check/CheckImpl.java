@@ -165,7 +165,17 @@ public abstract class CheckImpl implements Check {
     }
 
     protected boolean shouldFail(@Nullable String debug) {
+        if (isBedrockExempt()) return false;
         return !TGPlatform.getInstance().getEventBus().getUserFlag().fire(player, this, debug);
+    }
+
+    // Geyser's protocol translation doesn't reproduce a real Java client closely enough for
+    // every check (strict ack ordering, movement packets while an inventory is open), so
+    // Bedrock players are exempted from whatever checks are listed in bedrock.yml's
+    // exempt-checks. Gating here (rather than per-check) covers every fail()/failInventory()
+    // overload, including failInventory's mitigation side effect, in one place.
+    private boolean isBedrockExempt() {
+        return player.isBedrockPlayer() && platform.getConfigRepository().bedrock().isCheckExempt(name);
     }
 
     public void clearViolations() {

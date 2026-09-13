@@ -22,6 +22,8 @@ import com.deathmotion.totemguard.api.check.Check;
 import com.deathmotion.totemguard.common.cache.data.CheckSnapshot;
 import com.deathmotion.totemguard.common.check.impl.autototem.AutoTotemA;
 import com.deathmotion.totemguard.common.check.impl.autototem.AutoTotemB;
+import com.deathmotion.totemguard.common.check.impl.autototem.BedrockAutoTotemA;
+import com.deathmotion.totemguard.common.check.impl.autototem.BedrockAutoTotemB;
 import com.deathmotion.totemguard.common.check.impl.inventory.InventoryA;
 import com.deathmotion.totemguard.common.check.impl.inventory.InventoryB;
 import com.deathmotion.totemguard.common.check.impl.inventory.InventoryC;
@@ -83,6 +85,8 @@ public class CheckManagerImpl {
         ImmutableClassToInstanceMap<EventCheck> eventChecks = ImmutableClassToInstanceMap.<EventCheck>builder()
                 .put(AutoTotemA.class, new AutoTotemA(player))
                 .put(AutoTotemB.class, new AutoTotemB(player))
+                .put(BedrockAutoTotemA.class, new BedrockAutoTotemA(player))
+                .put(BedrockAutoTotemB.class, new BedrockAutoTotemB(player))
                 .build();
 
         this.inventoryA = new InventoryA(player);
