@@ -51,6 +51,10 @@ public class WorldEntityData {
         return trackedEntities.get(entityId) == EntityTypes.PLAYER;
     }
 
+    public String getWorldName() {
+        return worldName;
+    }
+
     public void handleJoinGame(WrapperPlayServerJoinGame packet) {
         worldName = packet.getWorldName();
         dimensionType = packet.getDimensionType();

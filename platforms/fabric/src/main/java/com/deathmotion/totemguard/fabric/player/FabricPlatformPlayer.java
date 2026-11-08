@@ -21,6 +21,7 @@ package com.deathmotion.totemguard.fabric.player;
 import com.deathmotion.totemguard.common.platform.player.ManualCheckHandle;
 import com.deathmotion.totemguard.common.platform.player.PlatformPlayer;
 import com.deathmotion.totemguard.fabric.FabricServerHolder;
+import com.deathmotion.totemguard.fabric.tick.FabricTickRunner;
 import lombok.Getter;
 import me.lucko.fabric.api.permissions.v0.Permissions;
 import net.kyori.adventure.platform.modcommon.MinecraftServerAudiences;
@@ -95,6 +96,26 @@ public class FabricPlatformPlayer implements PlatformPlayer {
             ServerLevel destination = findLevel(server, worldName);
             if (destination == null) destination = fabricPlayer.level();
             fabricPlayer.teleportTo(destination, x, y, z, Set.<Relative>of(), yaw, pitch, true);
+        });
+    }
+
+    @Override
+    public void setSpectator() {
+        MinecraftServer server = resolveServer();
+        if (server == null) return;
+        Runnable apply = () -> {
+            if (fabricPlayer.hasDisconnected()) return;
+            fabricPlayer.setGameMode(GameType.SPECTATOR);
+        };
+        if (server.isSameThread()) apply.run();
+        else server.execute(apply);
+    }
+
+    @Override
+    public void runLaterTicks(int ticks, @NotNull Runnable task) {
+        FabricTickRunner.runLaterTicks(ticks, () -> {
+            if (fabricPlayer.hasDisconnected()) return;
+            task.run();
         });
     }
 

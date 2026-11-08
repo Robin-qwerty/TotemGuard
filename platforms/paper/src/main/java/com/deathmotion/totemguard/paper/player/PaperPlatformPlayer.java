@@ -104,6 +104,22 @@ public class PaperPlatformPlayer implements PlatformPlayer {
     }
 
     @Override
+    public void setSpectator() {
+        scheduler.runForEntity(paperPlayer, () -> {
+            if (!paperPlayer.isOnline()) return;
+            paperPlayer.setGameMode(GameMode.SPECTATOR);
+        }, null);
+    }
+
+    @Override
+    public void runLaterTicks(int ticks, @NotNull Runnable task) {
+        scheduler.runForEntityDelayed(paperPlayer, () -> {
+            if (!paperPlayer.isOnline()) return;
+            task.run();
+        }, null, Math.max(1, ticks));
+    }
+
+    @Override
     public void beginManualCheck(@NotNull Consumer<@NotNull ManualCheckHandle> onStarted,
                                  @NotNull Runnable onDamageRefused) {
         scheduler.runForEntity(paperPlayer, () -> {

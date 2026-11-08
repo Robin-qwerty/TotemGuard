@@ -22,29 +22,77 @@ import com.deathmotion.totemguard.common.TGPlatform;
 import com.deathmotion.totemguard.fabric.FabricServerHolder;
 import com.deathmotion.totemguard.host.RuntimeDispatch;
 import net.minecraft.server.MinecraftServer;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.ArrayDeque;
+import java.util.logging.Level;
 
 public final class FabricTickRunner {
 
+    private static volatile FabricTickRunner active;
+
     private final TGPlatform platform;
+    private final ArrayDeque<Delayed> delayed = new ArrayDeque<>();
 
     public FabricTickRunner(TGPlatform platform) {
         this.platform = platform;
     }
 
+    public static void runLaterTicks(int ticks, @NotNull Runnable task) {
+        FabricTickRunner runner = active;
+        if (runner == null) return;
+        int delay = Math.max(1, ticks);
+        MinecraftServer server = FabricServerHolder.server();
+        Runnable enqueue = () -> runner.delayed.addLast(new Delayed(delay, task));
+        if (server != null && !server.isSameThread()) server.execute(enqueue);
+        else enqueue.run();
+    }
+
     public void start() {
+        active = this;
         RuntimeDispatch.setServerTickHandler(this::onServerTick);
     }
 
     public void stop() {
+        if (active == this) active = null;
+        delayed.clear();
         RuntimeDispatch.clearServerTickHandler();
     }
 
     private void onServerTick() {
         if (!platform.isEnabled()) return;
+        drainDelayed();
         MinecraftServer server = FabricServerHolder.server();
         if (server != null) {
             FabricNetherPortalTracker.markNetherPortalContacts(platform, server);
         }
         platform.tickPlayers();
+    }
+
+    private void drainDelayed() {
+        int pending = delayed.size();
+        for (int i = 0; i < pending; i++) {
+            Delayed next = delayed.pollFirst();
+            if (next == null) return;
+            if (--next.remaining > 0) {
+                delayed.addLast(next);
+                continue;
+            }
+            try {
+                next.task.run();
+            } catch (Throwable t) {
+                platform.getLogger().log(Level.WARNING, "Delayed task failed", t);
+            }
+        }
+    }
+
+    private static final class Delayed {
+        private int remaining;
+        private final Runnable task;
+
+        private Delayed(int remaining, Runnable task) {
+            this.remaining = remaining;
+            this.task = task;
+        }
     }
 }

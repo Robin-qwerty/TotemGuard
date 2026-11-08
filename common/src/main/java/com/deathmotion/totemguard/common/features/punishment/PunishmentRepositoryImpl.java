@@ -29,6 +29,7 @@ import com.deathmotion.totemguard.common.cache.CacheRepositoryImpl;
 import com.deathmotion.totemguard.common.check.CheckImpl;
 import com.deathmotion.totemguard.common.config.ConfigRepositoryImpl;
 import com.deathmotion.totemguard.common.database.util.DebugTemplate;
+import com.deathmotion.totemguard.common.features.log.IncidentFileLog;
 import com.deathmotion.totemguard.common.event.EventBusImpl;
 import com.deathmotion.totemguard.common.placeholder.PlaceholderRepositoryImpl;
 import com.deathmotion.totemguard.common.placeholder.engine.PlaceholderEngine;
@@ -37,6 +38,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -237,6 +239,8 @@ public class PunishmentRepositoryImpl implements PunishmentRepository, Reloadabl
                                       @Nullable DebugTemplate.Compiled compiledDebug,
                                       Map<String, Object> placeholderExtras) {
         int dispatchedCommands = 0;
+        List<String> executed = new ArrayList<>();
+        List<PunishmentType> executedTypes = new ArrayList<>();
 
         for (PunishmentCommand command : commands) {
             String processedCommand = command.raw().replace("%default_punishment%", defaultPunishmentCommand.raw()).trim();
@@ -254,7 +258,9 @@ public class PunishmentRepositoryImpl implements PunishmentRepository, Reloadabl
 
                 platform.dispatchCommand(dispatched);
                 dispatchedCommands++;
+                executed.add(dispatched);
                 PunishmentType effectiveType = effectiveType(command);
+                executedTypes.add(effectiveType);
                 if (effectiveType != PunishmentType.GENERIC) {
                     recordPunishment(check, effectiveType, capture.template(), capture.args(), debug, compiledDebug);
                 }
@@ -267,6 +273,10 @@ public class PunishmentRepositoryImpl implements PunishmentRepository, Reloadabl
             }
         }
 
+        if (dispatchedCommands > 0) {
+            IncidentFileLog incidentLog = platform.getIncidentFileLog();
+            if (incidentLog != null) incidentLog.logPunishment(check, executed, executedTypes, debug);
+        }
         return dispatchedCommands > 0;
     }
 

@@ -27,12 +27,19 @@ import org.jetbrains.annotations.Nullable;
  * Common supertype for events fired around a {@link Check}. Subscribe to react to every
  * check-driven event ({@link TGUserFlagEvent}, {@link TGUserPunishEvent}, future subtypes)
  * with one handler.
+ *
+ * <p>{@link TGUserFlagEvent} is dispatched synchronously on the player's packet thread.
+ * {@link TGUserPunishEvent} is dispatched on the async punishment task after the flag
+ * has been recorded.</p>
  */
 public interface TGCheckEvent extends TGUserEvent, Cancellable {
 
     /**
-     * The check that produced this event. Same instance the violation was recorded
-     * against, so {@link Check#getViolations()} reflects the count after this flag.
+     * The check that produced this event.
+     *
+     * <p>For {@link TGUserFlagEvent}, {@link Check#getViolations()} is the count before
+     * this flag is accepted. Cancelling the flag leaves the count unchanged. For
+     * {@link TGUserPunishEvent}, the count already includes the flag.</p>
      */
     @NotNull Check getCheck();
 

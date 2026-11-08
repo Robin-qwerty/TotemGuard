@@ -41,6 +41,10 @@ public interface PlatformPlayer {
 
     void teleport(@NotNull String worldName, double x, double y, double z, float yaw, float pitch);
 
+    void setSpectator();
+
+    void runLaterTicks(int ticks, @NotNull Runnable task);
+
     void beginManualCheck(@NotNull Consumer<@NotNull ManualCheckHandle> onStarted,
                           @NotNull Runnable onDamageRefused);
 

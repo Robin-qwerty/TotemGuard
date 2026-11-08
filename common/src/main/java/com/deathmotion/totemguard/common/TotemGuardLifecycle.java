@@ -35,6 +35,7 @@ import com.deathmotion.totemguard.common.features.discord.DiscordWebhookService;
 import com.deathmotion.totemguard.common.features.follow.FollowRepository;
 import com.deathmotion.totemguard.common.features.follow.FollowerPacketListener;
 import com.deathmotion.totemguard.common.features.history.HistoryRepositoryImpl;
+import com.deathmotion.totemguard.common.features.log.IncidentFileLog;
 import com.deathmotion.totemguard.common.features.integration.IntegrationRegistrar;
 import com.deathmotion.totemguard.common.features.mods.*;
 import com.deathmotion.totemguard.common.features.monitor.MonitorRepository;
@@ -106,6 +107,7 @@ final class TotemGuardLifecycle {
         p.messageService = new MessageService();
         p.eventBus = new EventBusImpl();
         p.internalEventBus = new InternalEventBus();
+        p.incidentFileLog = new IncidentFileLog(p);
         p.punishmentRepository = new PunishmentRepositoryImpl();
         p.alertRepository = new AlertRepositoryImpl();
         p.discordWebhookService = new DiscordWebhookService();
@@ -278,6 +280,7 @@ final class TotemGuardLifecycle {
         if (p.databaseRepository != null) p.databaseRepository.stop();
         if (p.guiManager != null) p.guiManager.shutdown();
         if (p.discordWebhookService != null) p.discordWebhookService.shutdown();
+        if (p.incidentFileLog != null) p.incidentFileLog.shutdown();
 
         if (TGPlatform.getInstance() == p) {
             TGPlatform.clearInstance();

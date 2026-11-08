@@ -30,6 +30,7 @@ import com.deathmotion.totemguard.common.features.check.CheckService;
 import com.deathmotion.totemguard.common.features.discord.DiscordWebhookService;
 import com.deathmotion.totemguard.common.features.follow.FollowRepository;
 import com.deathmotion.totemguard.common.features.history.HistoryRepositoryImpl;
+import com.deathmotion.totemguard.common.features.log.IncidentFileLog;
 import com.deathmotion.totemguard.common.features.integration.IntegrationRegistrar;
 import com.deathmotion.totemguard.common.features.mods.ModDetectionService;
 import com.deathmotion.totemguard.common.features.mods.ModSessionStore;
@@ -94,6 +95,7 @@ public abstract class TGPlatform {
     MessageService messageService;
     EventBusImpl eventBus;
     InternalEventBus internalEventBus;
+    IncidentFileLog incidentFileLog;
     PunishmentRepositoryImpl punishmentRepository;
     AlertRepositoryImpl alertRepository;
     DiscordWebhookService discordWebhookService;

@@ -7,7 +7,7 @@
 #
 
 # The version of the messages file. DO NOT TOUCH!!!
-config_version: 1
+config_version: 2
 
 prefix: "&#FBAF00&lTG &r&#6E6651»"
 
@@ -45,8 +45,8 @@ alerts:
     &#E7DEC4Debug: &#B8AC8F%tg_check_debug%
 
     &#E7DEC4Click to &#FBAF00teleport &#E7DEC4to &#FEE067%tg_player%&#E7DEC4.
-  # Resolved through `teleport.command` in config.yml. Blank disables click-to-teleport.
-  command: "%tg_teleport_command%"
+  # Click runs /tgalertteleport. Blank disables click-to-teleport.
+  command: "/tgalertteleport %tg_player%"
 
 mod-detection:
   alert:

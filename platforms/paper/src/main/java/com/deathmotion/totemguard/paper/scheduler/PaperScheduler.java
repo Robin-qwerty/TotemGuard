@@ -47,5 +47,7 @@ public interface PaperScheduler extends Scheduler {
 
     void runForEntity(@NotNull Entity entity, @NotNull Runnable task, @Nullable Runnable retired);
 
+    void runForEntityDelayed(@NotNull Entity entity, @NotNull Runnable task, @Nullable Runnable retired, long delayTicks);
+
     ScheduledTask runGlobalAtFixedRateTicks(@NotNull Runnable task, long periodTicks);
 }

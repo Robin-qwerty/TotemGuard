@@ -26,6 +26,7 @@ import com.deathmotion.totemguard.common.cache.CacheKeys;
 import com.deathmotion.totemguard.common.check.CheckImpl;
 import com.deathmotion.totemguard.common.config.key.MessagesKeys;
 import com.deathmotion.totemguard.common.database.util.DebugTemplate;
+import com.deathmotion.totemguard.common.features.log.IncidentFileLog;
 import com.deathmotion.totemguard.common.features.punishment.PunishmentRepositoryImpl;
 import com.deathmotion.totemguard.common.message.MessageService;
 import com.deathmotion.totemguard.common.network.NetworkPresenceRepository;
@@ -155,6 +156,8 @@ public class AlertRepositoryImpl implements AlertRepository, PresenceListener, C
                       @Nullable DebugTemplate.Compiled compiledDebug, Map<String, Object> extras) {
         UUID violatorUuid = check.player.getUuid();
         String violatorName = check.player.getName();
+        IncidentFileLog incidentLog = platform.getIncidentFileLog();
+        if (incidentLog != null) incidentLog.logFlag(check, violations, debug);
         Component realtimeMessage = AlertBuilder.build(check, violations, debug, extras);
         realtimeRoster.deliver(violatorUuid, realtimeMessage);
 

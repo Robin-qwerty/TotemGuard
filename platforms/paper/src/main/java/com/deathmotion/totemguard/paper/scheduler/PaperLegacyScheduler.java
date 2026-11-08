@@ -55,6 +55,18 @@ final class PaperLegacyScheduler implements PaperScheduler {
     }
 
     @Override
+    public void runForEntityDelayed(@NotNull Entity entity, @NotNull Runnable task, @Nullable Runnable retired, long delayTicks) {
+        long delay = Math.max(1L, delayTicks);
+        scheduler.runTaskLater(plugin, () -> {
+            if (!entity.isValid()) {
+                if (retired != null) retired.run();
+                return;
+            }
+            task.run();
+        }, delay);
+    }
+
+    @Override
     public void runAsyncTask(Runnable task) {
         scheduler.runTaskAsynchronously(plugin, task);
     }

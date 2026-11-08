@@ -19,8 +19,15 @@
 package com.deathmotion.totemguard.api.event.events;
 
 /**
- * Fired when a check flags a {@link com.deathmotion.totemguard.api.user.TGUser}.
- * Cancelling suppresses alert dispatch, violation increment, and punishment evaluation.
+ * Fired when a check is about to flag a {@link com.deathmotion.totemguard.api.user.TGUser}.
+ *
+ * <p>Dispatched synchronously on the player's packet thread, before
+ * {@link com.deathmotion.totemguard.api.check.Check#getViolations()} increases.
+ * Cancelling suppresses the violation increment, alert dispatch, and punishment
+ * evaluation for this flag only. A later flag fires a new event.</p>
+ *
+ * <p>Handlers run on the packet thread. Read state you already hold and return.
+ * Server API calls and blocking work stall that player's packets.</p>
  */
 public interface TGUserFlagEvent extends TGCheckEvent {
 }

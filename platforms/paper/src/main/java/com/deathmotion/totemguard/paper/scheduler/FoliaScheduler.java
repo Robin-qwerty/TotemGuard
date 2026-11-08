@@ -57,6 +57,12 @@ final class FoliaScheduler implements PaperScheduler {
     }
 
     @Override
+    public void runForEntityDelayed(@NotNull Entity entity, @NotNull Runnable task, @Nullable Runnable retired, long delayTicks) {
+        long delay = Math.max(1L, delayTicks);
+        entity.getScheduler().runDelayed(plugin, t -> task.run(), retired, delay);
+    }
+
+    @Override
     public void runAsyncTask(Runnable task) {
         asyncScheduler.runNow(plugin, t -> task.run());
     }

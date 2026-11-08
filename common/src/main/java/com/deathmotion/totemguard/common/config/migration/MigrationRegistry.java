@@ -32,7 +32,7 @@ public final class MigrationRegistry {
     public static Registry buildDefault() {
         Registry r = new Registry();
 
-        // Gotta add migrations here, once we release new versions that change the config based on version 1
+        r.register(ConfigFile.MESSAGES, new MessagesV1ToV2());
 
         return r;
     }

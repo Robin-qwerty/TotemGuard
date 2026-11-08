@@ -55,12 +55,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.IntFunction;
 import java.util.function.Predicate;
 
 public class CheckManagerImpl {
 
     private static volatile int knownCheckCount;
+    private static final ConcurrentHashMap<MethodOverride, Boolean> OVERRIDE_CACHE = new ConcurrentHashMap<>();
 
     public final ClassToInstanceMap<Check> allChecks;
 
@@ -158,12 +160,21 @@ public class CheckManagerImpl {
         return out;
     }
 
-    private static boolean overrides(Check check, String methodName, Class<?>... paramTypes) {
-        try {
-            Method method = check.getClass().getMethod(methodName, paramTypes);
-            return !method.getDeclaringClass().isInterface();
-        } catch (NoSuchMethodException e) {
-            return false;
+    private static boolean overrides(Check check, String methodName, Class<?> paramType) {
+        return OVERRIDE_CACHE.computeIfAbsent(
+                new MethodOverride(check.getClass(), methodName, paramType),
+                MethodOverride::lookup
+        );
+    }
+
+    private record MethodOverride(Class<?> type, String methodName, Class<?> paramType) {
+        private boolean lookup() {
+            try {
+                Method method = type.getMethod(methodName, paramType);
+                return !method.getDeclaringClass().isInterface();
+            } catch (NoSuchMethodException e) {
+                return false;
+            }
         }
     }
 
